@@ -1,6 +1,24 @@
 # Ripplex
 
-A lightweight, reactive state management library for React applications with built-in event bus and automatic async state handling.
+[![npm version](https://img.shields.io/npm/v/ripplex-core.svg)](https://www.npmjs.com/package/ripplex-core)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/ripplex-core)](https://bundlephobia.com/result?p=ripplex-core)
+[![typescript](https://img.shields.io/badge/TypeScript-supported-blue.svg)](#typescript-support)
+[![license](https://img.shields.io/npm/l/ripplex-core)](LICENSE)
+
+**Ripplex** is a lightweight, reactive state management library for **React** with built-in signals, event-driven architecture, and automatic async state handling — all with zero dependencies.
+
+---
+
+## Why Ripplex?
+
+- **Reactive**: Trigger component updates using `ripple()` and `useRipple()`
+- **Async-ready**: Auto-manage loading and error states with `useRippleEffect()`
+- **Event-driven**: Decouple logic with built-in `emit()` and `on()`
+- **Tiny**: <1.2KB gzipped, tree-shakable
+- **Type-safe**: Fully written in TypeScript
+- **Zero-config**: No provider or context setup needed
+
+---
 
 ## Installation
 
@@ -8,12 +26,13 @@ A lightweight, reactive state management library for React applications with bui
 npm install ripplex-core
 ```
 
-## Quick Start
+---
 
-```typescript
+## ⚡ Quick Start
+
+```tsx
 import { ripple, useRipple, emit, useRippleEffect } from "ripplex-core";
 
-// Create reactive state
 const counterStore = {
   count: ripple(0),
   loading: ripple(false),
@@ -24,20 +43,19 @@ function Counter() {
   const count = useRipple(counterStore.count);
   const loading = useRipple(counterStore.loading);
 
-  // Handle async operations with auto loading/error states
   useRippleEffect(
     "increment:async",
     async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((res) => setTimeout(res, 1000));
       counterStore.count.value += 1;
     },
-    counterStore // Auto-handles loading and error
+    counterStore
   );
 
   return (
     <div>
       <h2>{count}</h2>
-      <button onClick={() => emit("increment:async")}>
+      <button onClick={() => emit("increment:async")}> 
         {loading ? "Loading..." : "+1 Async"}
       </button>
       <button onClick={() => (counterStore.count.value -= 1)}>-1</button>
@@ -46,114 +64,76 @@ function Counter() {
 }
 ```
 
+---
+
 ## Core Concepts
 
-### Reactive State with ripple()
+### Reactive State
 
-Create reactive state that automatically triggers React re-renders:
-
-```typescript
+```ts
 const userStore = {
   name: ripple(""),
   isLoggedIn: ripple(false),
 };
 ```
 
-### React Integration with useRipple()
+### useRipple()
 
-Subscribe to state changes in React components:
-
-```typescript
+```tsx
 function UserProfile() {
   const name = useRipple(userStore.name);
-  const isLoggedIn = useRipple(userStore.isLoggedIn);
+  const loggedIn = useRipple(userStore.isLoggedIn);
 
-  return <div>{isLoggedIn ? `Hello ${name}` : "Please login"}</div>;
+  return <div>{loggedIn ? `Hello ${name}` : "Please login"}</div>;
 }
 ```
 
-### Event-Driven Architecture
+### Event-Driven Logic
 
-Decouple your application logic using events:
-
-```typescript
+```ts
 import { emit, on } from "ripplex-core";
 
-// Listen for events
-on("user:login", (userData) => {
-  userStore.name.value = userData.name;
+on("user:login", (data) => {
+  userStore.name.value = data.name;
   userStore.isLoggedIn.value = true;
 });
 
-// Emit events from anywhere
-emit("user:login", { name: "John" });
+emit("user:login", { name: "Kavya" });
 ```
 
-### Automatic Async State Management
+### Async State Handling
 
-Handle loading and error states automatically:
-
-```typescript
+```ts
 const todoStore = {
   todos: ripple([]),
   loading: ripple(false),
   error: ripple(null),
 };
 
-// Async operations with auto-managed loading/error states
 useRippleEffect(
   "fetch:todos",
   async () => {
-    const response = await fetch("/api/todos");
-    const data = await response.json();
-    todoStore.todos.value = data;
+    const res = await fetch("/api/todos");
+    todoStore.todos.value = await res.json();
   },
-  todoStore, // Automatically manages loading and error signals
+  todoStore
 );
 
-// Trigger from UI
 emit("fetch:todos");
 ```
 
-## API Reference
-
-### Core Functions
-
-- `ripple(initialValue)` - Create a reactive signal
-- `useRipple(signal)` - React hook to subscribe to a signal
-- `emit(event, payload?)` - Emit an event
-- `on(event, handler)` - Listen for events
-- `useRippleEffect(event, asyncHandler, store?)` - Handle async events with auto state management
-
-### Signal Properties
-
-```typescript
-const signal = ripple(0);
-
-signal.value = 10; // Set value
-const current = signal.value; // Get value
-const peek = signal.peek(); // Get without subscribing
-```
+---
 
 ## Store Pattern
 
-Organize related state in store objects:
-
-```typescript
-const appStore = {
-  // Data
+```ts
+export const appStore = {
   user: ripple(null),
   todos: ripple([]),
-
-  // UI State
   loading: ripple(false),
   error: ripple(null),
-
-  // Computed values can be derived in components
-  // or using external computed libraries
 };
 
-// Use throughout your app
 function App() {
   const user = useRipple(appStore.user);
   const loading = useRipple(appStore.loading);
@@ -161,9 +141,8 @@ function App() {
   useRippleEffect(
     "load:user",
     async (userId) => {
-      const response = await fetch(`/api/users/${userId}`);
-      const userData = await response.json();
-      appStore.user.value = userData;
+      const res = await fetch(`/api/users/${userId}`);
+      appStore.user.value = await res.json();
     },
     appStore
   );
@@ -177,11 +156,11 @@ function App() {
 }
 ```
 
+---
+
 ## TypeScript Support
 
-Ripple provides full TypeScript support:
-
-```typescript
+```ts
 interface User {
   id: number;
   name: string;
@@ -193,11 +172,56 @@ const userStore = {
 };
 ```
 
-## Why Ripplex?
+---
 
-- **Simple**: Minimal API with maximum power
-- **Reactive**: Automatic React integration with `useRipple`
-- **Event-driven**: Decouple logic with built-in event system
-- **Async-friendly**: Automatic loading and error state management
-- **TypeScript**: Full type safety out of the box
-- **Lightweight**: Small bundle size, zero dependencies
+## API Reference
+
+| Function                          | Description                                      |
+|----------------------------------|--------------------------------------------------|
+| `ripple(initialValue)`           | Create a reactive signal                         |
+| `useRipple(signal)`              | React hook to subscribe to a signal              |
+| `emit(event, payload?)`          | Emit a custom event                              |
+| `on(event, handler)`             | Listen for custom events                         |
+| `useRippleEffect(event, fn, store?)` | Handle async logic with loading/error tracking |
+
+---
+
+## Comparison
+
+| Feature              | Ripplex         | Zustand        | Redux           |
+|---------------------|------------------|----------------|------------------|
+| Reactive signals     | ✅ Built-in       | ⚠️ External    | ❌ Manual        |
+| Event bus            | ✅ Built-in       | ❌             | ⚠️ Middleware    |
+| Async loading/error  | ✅ Auto-managed   | ❌ Manual       | ⚠️ Middleware    |
+| Bundle size          | < 1.2 KB         | ~1.2 KB        | 15–20 KB         |
+| Boilerplate-free     | ✅ Yes            | ✅ Yes          | ❌ No            |
+| DevTools             | Ὢ7 Coming soon   | ✅ Yes          | ✅ Yes           |
+
+---
+
+## Contributing
+
+We welcome contributions!
+
+```bash
+# Setup project
+npm install
+
+# Run build
+npm run build
+
+# Start dev (if needed)
+npm run dev
+```
+
+Open a PR with your enhancements or bugfixes. Let’s improve this together!
+
+---
+
+## License
+
+MIT — [View License](./LICENSE)
+
+---
+
+
